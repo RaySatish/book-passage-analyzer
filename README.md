@@ -52,17 +52,24 @@ python analyzer.py --file passage.txt      # Read from file
 ```mermaid
 flowchart LR
     Input --> analyzer.py
-    analyzer.py --> Word_Count[Word Count - Python]
-    analyzer.py --> Emotion[Emotion Detection - LLM]
-    analyzer.py --> Books[Book Identification - LLM]
-    analyzer.py --> Summary[Summarization - LLM]
+    analyzer.py --> WordCount["Word Count (Python)"]
+    analyzer.py --> Emotion["Emotion Detection (LLM)"]
+    analyzer.py --> Books["Book Identification (LLM)"]
+    analyzer.py --> Summary["Summarization (LLM)"]
 
-    subgraph LiteLLM Fallback
-        llama-3.1-8b --> llama-4-scout-17b --> gemma2-9b --> llama-guard-3-8b
-    end
+    Emotion --> Fallback["LiteLLM Fallback Chain"]
+    Books --> Fallback
+    Summary --> Fallback
 
-    Emotion & Books & Summary --> LiteLLM Fallback
-    Word_Count & Emotion & Books & Summary --> JSON_Output[JSON Output]
+    Fallback --> M1["llama-3.1-8b"]
+    M1 --> M2["llama-4-scout-17b"]
+    M2 --> M3["gemma2-9b"]
+    M3 --> M4["llama-guard-3-8b"]
+
+    WordCount --> Output["JSON Output"]
+    Emotion --> Output
+    Books --> Output
+    Summary --> Output
 ```
 
 Input comes in through any of the three modes. Word count is pure Python — no reason to call an LLM for arithmetic. Emotion detection, book identification, and summarization each make a focused LLM call with a structured prompt. If a model is rate-limited or unavailable, LiteLLM automatically falls through to the next one in the chain.
